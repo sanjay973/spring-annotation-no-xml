@@ -1,0 +1,202 @@
+<context:component-scan base-package = "com.springdemo"/> ->
+reads the spring package for annotations and register beans accordingly .
+
+@Componet("something")
+this is replacement for xml config 
+<bean name = "something" class="some.class"></bean>
+
+Spring will automatically register something(@Componet("something")) bean
+
+@Component -> this will register a default bean-id.
+suppose we have a class TennisCoach the default bean-id for this class will be tennisCoach.
+
+
+@AutoWired annotaion ->
+Instead of injecting dependencies like this :
+
+using constructor injection: 
+ <constructor-arg ref = "myFortune"/>
+
+using setter injection : 
+<property name = "fortuneService" ref="myFortune"/>
+
+
+ Spring provides a shorthand for creating instance of required dependency.
+ 
+ 	@Autowired
+	public TennisCoach(FortuneService theFortuneService) {
+		fortuneService = theFortuneService;
+	}
+
+Spring automatically searches for the class which implements the FortuneService Interface, and Initializes the object.
+
+
+=====>
+Question
+
+I have finished the video "Constructor Injection - Writing Code part2".
+
+I have commented the Autowired annotation. But still it worked. How did it work?
+
+    //@Autowired
+    public TennisCoach(FortuneService theFortuneService) {
+        System.out.println(" theFortuneService " + theFortuneService);
+        fortuneService = theFortuneService;
+    }
+===
+
+Answer
+
+This is a new feature of Spring 4.3.
+
+Here is the snippet from the Spring Docs.
+
+Section 1.9.2: Autowired
+
+As of Spring Framework 4.3, an @Autowired annotation on such a constructor is no longer necessary if the target bean only defines one constructor to begin with. However, if several constructors are available, at least one must be annotated to teach the container which one to use.
+
+I personally prefer to use the @Autowired annotation because it makes the code more readable. But as mentioned, the @Autowired is not required for this scenario.
+
+
+
+
+
+
+
+
+@AutoWired setter Injection - 
+
+put autowired annotation on a setter method.
+
+we can use any random method name and annotate the method with @Autowired, spring will use this method for dependency injection.
+
+
+
+
+@Autowired field Injection- 
+
+we can directly place @autowired on the field. spring will automatically initialize the object. 
+spring makes this possible using java reflections.
+So now we can inject dependencies without using constructor or setter injection.
+
+	@Autowired
+	private FortuneService fortuneService;
+
+
+
+How Autowired works->
+	@Autowired
+	public TennisCoach(FortuneService theFortuneService) {
+		fortuneService = theFortuneService;
+	}
+spring needs to inject theFortuneService dependency.
+Now what spring does is to find the implementation of FortuneService interface.
+Say HappyFortuneService implements the FortuneService interface.
+But what if we have more than one implementations of FortuneService interface.
+Spring will not be able to identify how to initialize and inject the dependency.
+
+So how we can resolve this issue.
+we resolve this issue by using @Qualifier annotation.
+All the implementation classes will have a been id(as they all are annotated with @component). so we pass the unique bean id inside the @Quualifier annotation. and spring initializes the given dependency using that class.
+
+The error if @Qualifier is not used : 
+WARNING: Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'tennisCoach': Unsatisfied dependency expressed through field 'fortuneService'; nested exception is org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'com.springdemo.FortuneService' available: expected single matching bean but found 2: happyFortuneService,randomService
+
+
+@Autowired
+@Qualifier("happyFortuneService")
+private FortuneService fortuneService;
+
+Now spring will use HappyFortuneService to inject the dependency.
+
+
+
+
+Bean scope using Annotations : 
+@Scope("prototype")
+@Scope("singleton")
+
+Bean Scope life-cycle methods :
+@Predestroy -> code will be executed before bean is destroyed.
+
+@Predestroy
+doMyCleanupStuff(){
+}
+
+@PostConstruct -> code will execute after constructor and after injection of dependencies.
+
+@PostConstruct
+doMyInitStuff(){
+print("something")
+}
+
+refer to the doc : https://www.udemy.com/course/spring-hibernate-tutorial/learn/lecture/5389290#overview
+
+
+
+
+@Cofiguration -: if we do not wish to use xml file we can configure the application using java only.
+
+We have to annotate the class with @Configuration and we have to enable component scan.
+
+@Configuration /*Now sport config will act as an config class*/
+@ComponentScan("com.springdemo")
+public class SportConfig {
+
+}
+
+
+We can define our custom bean using @Bean
+
+
+	@Bean
+	public FortuneService sadFortuneService() {
+		return new SadFortuneService();
+	}
+new bean will be created with id sadFortuneService.
+Now we can access the bean using -AnnotationConfigApplicationContext
+
+
+
+
+Reading values from properties file ->
+
+create a file sport.properties
+fill some values ->
+foo.email="sanjay@gmail.com"
+foo.name = "Sanjay"
+
+
+
+Now in the java class : to access the properties file we use an annotation called @PropertySource("classpath:sport.properties");
+
+to assign values to some field.
+
+@Value(${"foo.email"})
+private String name;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
